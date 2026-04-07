@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4 Images 1 Mot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════
+       CANVAS CONFETTI
+  ════════════════════════════════════════ -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN — ACCUEIL
+  ════════════════════════════════════════ -->
+  <div class="screen" id="screen-home">
+
+    <div class="logo-title">4 Images<br>1 Mot</div>
+    <div class="logo-sub">⚡ Testez votre esprit ⚡</div>
+
+    <!-- Aperçu 4 images -->
+    <div class="preview-grid">
+      <div class="preview-card"><img src="https://picsum.photos/seed/game1/120/120" alt="aperçu 1"></div>
+      <div class="preview-card"><img src="https://picsum.photos/seed/game2/120/120" alt="aperçu 2"></div>
+      <div class="preview-card"><img src="https://picsum.photos/seed/game3/120/120" alt="aperçu 3"></div>
+      <div class="preview-card"><img src="https://picsum.photos/seed/game4/120/120" alt="aperçu 4"></div>
+    </div>
+
+    <!-- Description -->
+    <p style="font-size:0.9rem; color:var(--grey); max-width:300px; text-align:center; line-height:1.6;">
+      45 questions générées par IA &bull; 3 niveaux de difficulté<br>
+      🏆 Score maximum : <strong style="color:var(--yellow)">80 pts</strong>
+    </p>
+
+    <p style="font-size:0.85rem; color:var(--grey); margin-top:-10px;">Choisissez votre niveau :</p>
+
+    <!-- Sélection du niveau -->
+    <div class="level-cards">
+
+      <div class="level-card easy" onclick="startGame('facile')">
+        <span class="level-emoji">🌱</span>
+        <span class="level-name">Facile</span>
+        <span class="level-pts">Mots simples</span>
+      </div>
+
+      <div class="level-card medium" onclick="startGame('intermediaire')">
+        <span class="level-emoji">🔥</span>
+        <span class="level-name">Intermédiaire</span>
+        <span class="level-pts">Mots variés</span>
+      </div>
+
+      <div class="level-card hard" onclick="startGame('difficile')">
+        <span class="level-emoji">💀</span>
+        <span class="level-name">Difficile</span>
+        <span class="level-pts">Mots complexes</span>
+      </div>
+
+    </div>
+
+    <!-- Règles rapides -->
+    <p style="font-size:0.75rem; color:rgba(255,255,255,0.25);">
+      Score de départ : 5 pts &bull; Bonne réponse : +5 pts &bull; Indice : -2 pts &bull; Passer : -5 pts
+    </p>
+
+  </div><!-- /screen-home -->
+
+
+  <!-- ═══════════════════════════════════════
+       SCREEN — JEU
+  ════════════════════════════════════════ -->
+  <div class="screen hidden" id="screen-game">
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-score" id="hud-score">
+        ⭐ <span id="score-display">5</span>
+      </div>
+      <div class="hud-level">
+        Niveau
+        <span id="level-display">Facile</span>
+      </div>
+      <div class="hud-progress">
+        <span id="q-current">1</span>
+        <span style="color:rgba(255,255,255,0.2)">/15</span>
+      </div>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+    </div>
+
+    <!-- Contenu dynamique (chargement IA + question) -->
+    <div id="game-content" style="width:100%; display:flex; flex-direction:column; align-items:center; flex:1;">
+
+      <!-- État : chargement IA -->
+      <div class="ai-loading" id="ai-loading">
+        <div class="ai-loading-text">🤖 L'IA génère votre question...</div>
+        <div class="ai-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- État : question affichée -->
+      <div id="question-area" style="width:100%; display:none; flex-direction:column; align-items:center;">
+
+        <!-- 4 images -->
+        <div class="images-grid" id="images-grid">
+          <div class="img-card loading" id="img-0">
+            <span class="img-num">1</span>
+            <img src="" alt="image 1">
+            <div class="img-loader"><div class="spinner"></div></div>
+          </div>
+          <div class="img-card loading" id="img-1">
+            <span class="img-num">2</span>
+            <img src="" alt="image 2">
+            <div class="img-loader"><div class="spinner"></div></div>
+          </div>
+          <div class="img-card loading" id="img-2">
+            <span class="img-num">3</span>
+            <img src="" alt="image 3">
+            <div class="img-loader"><div class="spinner"></div></div>
+          </div>
+          <div class="img-card loading" id="img-3">
+            <span class="img-num">4</span>
+            <img src="" alt="image 4">
+            <div class="img-loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Texte d'indice -->
+        <div class="hint-revealed" id="hint-text"></div>
+
+        <!-- Slots de réponse (générés en JS) -->
+        <div class="answer-area" id="answer-area"></div>
+
+        <!-- Lettres suggestion (générées en JS) -->
+        <div class="suggestions" id="suggestions"></div>
+
+        <!-- Boutons d'action -->
+        <div class="action-btns">
+          <button class="action-btn btn-hint"  onclick="useHint()">
+            💡 Indice <span style="opacity:0.6; font-size:0.75rem">(-2 pts)</span>
+          </button>
+          <button class="action-btn btn-erase" onclick="eraseLast()">
+            ⌫ Effacer
+          </button>
+          <button class="action-btn btn-skip"  onclick="askSkip()">
+            ⏭ Passer <span style="opacity:0.6; font-size:0.75rem">(-5 pts)</span>
+          </button>
+          <button class="action-btn btn-reset" onclick="askReset()">
+            🔄 Recommencer
+          </button>
+        </div>
+
+      </div><!-- /question-area -->
+
+    </div><!-- /game-content -->
+
+  </div><!-- /screen-game -->
+
+
+  <!-- ═══════════════════════════════════════
+       SCREEN — NIVEAU TERMINÉ
+  ════════════════════════════════════════ -->
+  <div class="screen hidden" id="screen-level">
+
+    <div class="level-complete-icon" id="level-icon">🎉</div>
+    <div class="level-complete-title" id="level-title">Niveau Terminé !</div>
+    <p style="color:var(--grey); font-size:0.9rem;" id="level-subtitle">Excellent travail !</p>
+
+    <!-- Stats du niveau -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-correct" style="color:var(--green)">—</div>
+        <div class="stat-lbl">Bonnes rép.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-score" style="color:var(--yellow)">—</div>
+        <div class="stat-lbl">Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-hints" style="color:var(--cyan)">—</div>
+        <div class="stat-lbl">Indices utilisés</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-next-level">Niveau Suivant →</button>
+    <button class="btn-secondary" onclick="showScreen('screen-home')">Accueil</button>
+
+  </div><!-- /screen-level -->
+
+
+  <!-- ═══════════════════════════════════════
+       SCREEN — FIN DE JEU
+  ════════════════════════════════════════ -->
+  <div class="screen hidden" id="screen-end">
+
+    <div class="end-title">
+      🏆 Félicitations !<br>
+      <span style="color:var(--yellow)">Jeu Terminé</span>
+    </div>
+
+    <div class="end-score-ring">
+      <div class="end-score-num" id="final-score">0</div>
+      <div class="end-score-max">/ 80 pts</div>
+    </div>
+
+    <p style="color:var(--grey); max-width:280px; text-align:center; font-size:0.9rem;" id="final-msg"></p>
+
+    <button class="btn-primary" onclick="location.reload()">🔄 Rejouer</button>
+
+  </div><!-- /screen-end -->
+
+
+  <!-- ═══════════════════════════════════════
+       SCREEN — GAME OVER
+  ════════════════════════════════════════ -->
+  <div class="screen hidden" id="screen-gameover">
+
+    <div class="gameover-title">GAME OVER</div>
+    <div style="font-size:4rem;">💀</div>
+
+    <p style="color:var(--grey); text-align:center; max-width:280px; font-size:0.9rem; line-height:1.6;">
+      Vous avez épuisé tous vos points.<br>Pas de panique, réessayez !
+    </p>
+
+    <p style="font-family:'Fredoka One',cursive; font-size:1.2rem; color:var(--red);">
+      Score final : <span id="go-score">0</span> pts
+    </p>
+
+    <button class="btn-primary" onclick="location.reload()">🔄 Réessayer</button>
+
+  </div><!-- /screen-gameover -->
+
+
+  <!-- ═══════════════════════════════════════
+       MODALES
+  ════════════════════════════════════════ -->
+
+  <!-- Modale : Passer la question -->
+  <div class="modal-overlay" id="modal-skip">
+    <div class="modal">
+      <div class="modal-icon">⏭</div>
+      <div class="modal-title">Passer la question ?</div>
+      <p class="modal-text">
+        Vous perdrez <strong style="color:var(--orange)">5 points</strong> en passant cette question.
+      </p>
+      <div class="modal-btns">
+        <button class="modal-btn confirm" onclick="confirmSkip()">Oui, passer</button>
+        <button class="modal-btn cancel"  onclick="closeModal('modal-skip')">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale : Recommencer — étape 1 -->
+  <div class="modal-overlay" id="modal-reset-1">
+    <div class="modal">
+      <div class="modal-icon">🔄</div>
+      <div class="modal-title">Recommencer ?</div>
+      <p class="modal-text">Êtes-vous sûr de vouloir recommencer depuis le début ?</p>
+      <div class="modal-btns">
+        <button class="modal-btn confirm" onclick="askReset2()">Oui</button>
+        <button class="modal-btn cancel"  onclick="closeModal('modal-reset-1')">Non, continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale : Recommencer — étape 2 (confirmation finale) -->
+  <div class="modal-overlay" id="modal-reset-2">
+    <div class="modal">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">Dernière chance !</div>
+      <p class="modal-text">
+        Vous perdrez <strong style="color:var(--red)">TOUS vos points</strong> et recommencerez à zéro.
+      </p>
+      <div class="modal-btns">
+        <button class="modal-btn confirm" onclick="confirmReset()">Je confirme</button>
+        <button class="modal-btn cancel"  onclick="closeModal('modal-reset-2')">Non, continuer</button>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>
